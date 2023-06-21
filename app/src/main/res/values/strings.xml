@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">Pet Care</string>
+    <string name="pet_care">PetCare</string>
+    <string name="pet_registration_form">Pet Registration Form</string>
+    <string name="microchip_id">Microchip ID</string>
+    <string name="name_text">Name</string>
+    <string name="gender_text">Gender</string>
+    <string name="email_address">Email Address</string>
+    <string name="access_code">Access Code</string>
+    <string name="confirm_code">Confirm Code</string>
+    <string name="breed_text">Breed</string>
+    <string name="neutered_text">Neutered</string>
+    <string name="is_neutered_text">Is Neutered?</string>
+    <string name="reset">Reset</string>
+    <string name="submit">Submit</string>
+
+    <string-array name="sizes_array">
+        <item>N/A</item>
+        <item>German Shepherd</item>
+        <item>Bulldog</item>
+        <item>Retriever</item>
+        <item>Husky</item>
+    </string-array>
+
+    <string-array name="chips">
+        <item>DA92384</item>
+        <item>5213A4EGAL</item>
+        <item>78EX8937</item>
+        <item>AAMOCS3</item>
+    </string-array>
+
+    <string-array name="domainTypes">
+        <item>edu</item>
+        <item>co</item>
+        <item>com</item>
+        <item>gal</item>
+    </string-array>
+
+</resources>
