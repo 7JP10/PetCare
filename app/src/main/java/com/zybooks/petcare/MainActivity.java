@@ -2,17 +2,24 @@ package com.zybooks.petcare;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.zybooks.petcare.model.Pet;
+import com.zybooks.petcare.repo.PetRepository;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private Spinner spinner;
@@ -35,6 +42,14 @@ public class MainActivity extends AppCompatActivity {
     private RadioButton GenderGroupMale;
     private boolean checkBox = true;
     private boolean radioButton = true;
+
+    private Button submit_button;
+
+    private Button repository_button;
+
+    //DBHelper DB;
+
+    private PetRepository petRepo;
 
     //*****************************************************
     //**********************OnCreate***********************
@@ -83,6 +98,14 @@ public class MainActivity extends AppCompatActivity {
 
         GenderGroupFemale = findViewById(R.id.radio_female);
         GenderGroupMale = findViewById(R.id.radio_male);
+
+        submit_button = findViewById(R.id.submit_button);
+        repository_button = findViewById(R.id.repository_button);
+
+        //DB = new DBHelper(this);
+
+        petRepo = PetRepository.getInstance(this);
+
         //*****************************************************
         //**********************SPINNER************************
 
@@ -104,111 +127,133 @@ public class MainActivity extends AppCompatActivity {
         });
         //*****************************************************
 
-
-
-    }
-
-    public void onCheckboxClicked(View v) {
-        boolean checked = ((CheckBox) v).isChecked();
-        // Which checkbox was selected?
-        if(v.getId() == R.id.checkbox_neutered){
-            if (checked) {
-                checkBox =true;
-            } else {
-                checkBox =true;
+        repository_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), ViewRepository.class);
+                startActivity(intent);
             }
-        }
-        checkBox =true;
+        });
 
-    }
+        submit_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String microChip = MicroChipEditView.getText().toString();
+                String name = NameEditView.getText().toString();
+                String email = EmailEditView.getText().toString();
+                String accessCode = AccessCodeEditView.getText().toString();
+                String confirmCode = ConfirmCodeEditView.getText().toString();
+                String breed = "";
+                String gender = "";
+                String neutered = "";
+                Boolean flagId = false;
+                int errorCounter = 0;
 
-    public void onRadioButtonClicked(View view) {
-        // Which radio button was selected?
+                /*************************************/
 
-        if(view.getId() == R.id.radio_male){
-            radioButton = true;
-        } else if(view.getId() == R.id.radio_female){
-            radioButton = true;
-        }
-    }
+                List<Pet> getPets = petRepo.getPets();
 
+                errorCounter += checkMicroId(microChip, getPets);
 
-    public void resetClick(View view) {
-        MicroChipEditView.getText().clear();
-        MicroChipEditView.setText("ID");
-        NameEditView.getText().clear();
-        EmailEditView.getText().clear();
-        EmailEditView.setText("none@none.com");
-        AccessCodeEditView.getText().clear();
-        ConfirmCodeEditView.getText().clear();
-        NeuteredCheckBox.setChecked(true);
-        spinner.setSelection(0);
-        GenderGroupFemale.setChecked(true);
+                errorCounter += checkName(name);
 
-        MicroChipTextView.setTextColor(Color.parseColor("#818285"));
-        NameTextView.setTextColor(Color.parseColor("#818285"));
-        EmailTextView.setTextColor(Color.parseColor("#818285"));
-        AccessCodeTextView.setTextColor(Color.parseColor("#818285"));
-        ConfirmCodeTextView.setTextColor(Color.parseColor("#818285"));
+                errorCounter += checkEmail(email);
 
-        String item = "Reset!!!";
-        Toast.makeText(MainActivity.this, item, Toast.LENGTH_SHORT).show();
-    }
+                errorCounter += checkPasscode(accessCode, confirmCode);
 
-    public void submitClick(View view) {
-        String microChip = MicroChipEditView.getText().toString();
-        String name = NameEditView.getText().toString();
-        String email = EmailEditView.getText().toString();
-        String accessCode = AccessCodeEditView.getText().toString();
-        String confirmCode = ConfirmCodeEditView.getText().toString();
+                errorCounter += checkSpinner();
 
-        boolean emptyError = false;
-        boolean userError = false;
-
-        //*************************MICROCHIP*************************
-        boolean mchip = false;
-
-        if(!microChip.isEmpty()){
-            if(microChip.length() >= 5 && microChip.length() <= 15){
-                //mchip = true;
-                //String item = "CORRECT MICROCHIP INPUT!";
-                //Toast.makeText(MainActivity.this, item, Toast.LENGTH_SHORT).show();
-                String[] microChipsAvailable = getResources().getStringArray(R.array.chips);
-                for(int i = 0; i < microChipsAvailable.length; i++){
-                    if(microChipsAvailable[i].equals(microChip)){
-                        mchip = true;
-                    }
+                if(spinnerPosition == 1){
+                    breed = "German Shepherd";
+                } else if(spinnerPosition == 2){
+                    breed = "Bulldog";
+                } else if(spinnerPosition == 3){
+                    breed = "Retriever";
+                } else{
+                    breed = "Husky";
                 }
-                if(!mchip){
-                    userError = true;
-                    String item = "MICROCHIP NOT FOUND";
+
+                if(radioButton == false){
+                    gender = "male";
+                } else{
+                    gender = "female";
+                }
+
+                if(checkBox == true){
+                    neutered = "True";
+                }else{
+                    neutered = "False";
+                }
+
+                /*************************************/
+                /*************************************/
+                petRepo.deleteSubject(getPets.get(1));
+
+                if(errorCounter == 0){
+                    Pet pet = new Pet(microChip, name, gender, email, accessCode,breed, neutered);
+                    //Pet pet = new Pet(microChip, name, email);
+                    petRepo.addPet(pet);
+                    String item = "Registration completed";
+                    Toast.makeText(MainActivity.this, item, Toast.LENGTH_SHORT).show();
+
+
+                } else {
+                    String item = "EMPTY REQUIRED FIELD OR IMPROPER INPUT";
                     Toast.makeText(MainActivity.this, item, Toast.LENGTH_SHORT).show();
                 }
-            } else{ userError = true; }
-        } else{ emptyError = true; }
 
-        if(!mchip){
+
+            }
+        });
+
+
+    }
+
+    public int checkMicroId(String microId, List<Pet> getPets){
+        Boolean flag = false;
+        Boolean flagId = false;
+
+        if(!microId.isEmpty()){
+            if(microId.length() >= 5 && microId.length() <= 15){
+                for(int i = 0; i < getPets.size(); i++){
+                    String chipID = getPets.get(i).getMicroId();
+                    if(chipID.equals(microId)){
+                        flagId = true;
+                    }
+                }
+
+                if(flagId == false){
+                    flag = false;
+                } else{
+                    flag = true;
+                }
+            } else{
+                flag = true;
+            }
+        } else{
+            flag = true;
+        }
+
+        if(flag == true){
             MicroChipTextView.setTextColor(Color.RED);
-            //String item = "INCORRECT MICROCHIP INPUT";
-            //Toast.makeText(MainActivity.this, item, Toast.LENGTH_SHORT).show();
+            return 1;
         } else{
             MicroChipTextView.setTextColor(Color.parseColor("#818285"));
+            return 0;
         }
+    }
 
-        //***********************************************************
-
-        //***************************NAME****************************
-
+    public int checkName(String name){
         if(name.isEmpty()){
-            emptyError = true;
             NameTextView.setTextColor(Color.RED);
+            return 1;
         } else{
             NameTextView.setTextColor(Color.parseColor("#818285"));
+            return 0;
         }
+    }
 
-        //***********************************************************
-
-        //***************************EMAIL***************************
+    public int checkEmail(String email){
         String address = ""; //min 3
         String domain = "";
         String dType = "";
@@ -244,15 +289,17 @@ public class MainActivity extends AppCompatActivity {
                 boolean domainError = false;
 
                 if(!(address.length() >= 3)){
-                    userError = true;
+                    //userError = true;
                     addyError = true;
                     EmailTextView.setTextColor(Color.RED);
+                    return 1;
                 }
 
                 if(domain.isEmpty()){
-                    userError = true;
+                    //userError = true;
                     domainError = true;
                     EmailTextView.setTextColor(Color.RED);
+                    return 1;
                 }
 
                 for(int i = 0; i < dTypes.length; i++){
@@ -262,87 +309,107 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 if(flag == false){
-                    userError = true;
+                    //userError = true;
                     EmailTextView.setTextColor(Color.RED);
+                    return 1;
                 }
 
                 if(flag == true && addyError == false && domainError == false){
                     EmailTextView.setTextColor(Color.parseColor("#818285"));
+                    return 0;
                 }
 
             } else{
-                userError = true;
+                //userError = true;
                 EmailTextView.setTextColor(Color.RED);
+                return 1;
             }
         }else{
-            emptyError = true;
+            //emptyError = true;
             EmailTextView.setTextColor(Color.RED);
+            return 1;
         }
+        return 1;
+    }
 
-        //***********************************************************
-
-        //*************************PASSCODE**************************
-
+    public int checkPasscode(String accessCode, String confirmCode){
         if(!(accessCode.isEmpty()) && !(confirmCode.isEmpty())){
             if(!(accessCode.equals(confirmCode))){
-                userError = true;
+                //userError = true;
                 AccessCodeTextView.setTextColor(Color.RED);
                 ConfirmCodeTextView.setTextColor(Color.RED);
-                String item = "CODES DON'T MATCH";
-                Toast.makeText(MainActivity.this, item, Toast.LENGTH_SHORT).show();
+                //String item = "CODES DON'T MATCH";
+                //Toast.makeText(MainActivity.this, item, Toast.LENGTH_SHORT).show();
+                return 1;
             } else{
                 AccessCodeTextView.setTextColor(Color.parseColor("#818285"));
                 ConfirmCodeTextView.setTextColor(Color.parseColor("#818285"));
+                return 0;
             }
         } else{
-            emptyError = true;
+            //emptyError = true;
             AccessCodeTextView.setTextColor(Color.RED);
             ConfirmCodeTextView.setTextColor(Color.RED);
-        }
-
-        //***********************************************************
-        //**************************SPINNER**************************
-
-        if(spinnerPosition == 0){
-            emptyError = true;
-            BreedTextView.setTextColor(Color.RED);
-        } else{
-            BreedTextView.setTextColor(Color.parseColor("#818285"));
-        }
-
-        //***********************************************************
-        //**************************RADIO_BUTTON**************************
-
-        if(radioButton == false){
-            GenderTextView.setTextColor(Color.RED);
-        } else{
-            GenderTextView.setTextColor(Color.parseColor("#818285"));
-        }
-
-        //***********************************************************
-        //**************************CHECKBOX**************************
-
-        if(checkBox == false){
-            NeuteredCodeTextView.setTextColor(Color.RED);
-        } else{
-            NeuteredCodeTextView.setTextColor(Color.parseColor("#818285"));
-        }
-
-        //***********************************************************
-        //**************************ENDING***************************
-
-        if(emptyError == true && userError == true){
-            String item = "EMPTY REQUIRED FIELD & IMPROPER INPUT";
-            Toast.makeText(MainActivity.this, item, Toast.LENGTH_SHORT).show();
-        }else if(emptyError == true){
-            String item = "EMPTY REQUIRED FIELD";
-            Toast.makeText(MainActivity.this, item, Toast.LENGTH_SHORT).show();
-        } else if(userError == true){
-            String item = "IMPROPER INPUT";
-            Toast.makeText(MainActivity.this, item, Toast.LENGTH_SHORT).show();
-        } else{
-            String item = "INFO STORED SUCCESSFULLY IN SERVER!";
-            Toast.makeText(MainActivity.this, item, Toast.LENGTH_SHORT).show();
+            return 1;
         }
     }
+
+    public int checkSpinner(){
+        if(spinnerPosition == 0){
+            //emptyError = true;
+            BreedTextView.setTextColor(Color.RED);
+            return 1;
+        } else{
+            BreedTextView.setTextColor(Color.parseColor("#818285"));
+            return 0;
+        }
+    }
+
+    public void onCheckboxClicked(View v) {
+        boolean checked = ((CheckBox) v).isChecked();
+        // Which checkbox was selected?
+        if(v.getId() == R.id.checkbox_neutered){
+            if (checked) {
+                checkBox = true;
+            } else {
+                checkBox = false;
+            }
+        }
+        //checkBox =true;
+
+    }
+
+    public void onRadioButtonClicked(View view) {
+        // Which radio button was selected?
+
+        if(view.getId() == R.id.radio_male){
+            radioButton = false;
+        } else if(view.getId() == R.id.radio_female){
+            radioButton = true;
+        }
+    }
+
+
+    public void resetClick(View view) {
+        MicroChipEditView.getText().clear();
+        MicroChipEditView.setText("ID");
+        NameEditView.getText().clear();
+        EmailEditView.getText().clear();
+        EmailEditView.setText("none@none.com");
+        AccessCodeEditView.getText().clear();
+        ConfirmCodeEditView.getText().clear();
+        NeuteredCheckBox.setChecked(true);
+        spinner.setSelection(0);
+        GenderGroupFemale.setChecked(true);
+
+        MicroChipTextView.setTextColor(Color.parseColor("#818285"));
+        NameTextView.setTextColor(Color.parseColor("#818285"));
+        EmailTextView.setTextColor(Color.parseColor("#818285"));
+        AccessCodeTextView.setTextColor(Color.parseColor("#818285"));
+        ConfirmCodeTextView.setTextColor(Color.parseColor("#818285"));
+
+        String item = "Reset!!!";
+        Toast.makeText(MainActivity.this, item, Toast.LENGTH_SHORT).show();
+    }
+
 }
