@@ -187,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
 
                 /*************************************/
                 /*************************************/
-                petRepo.deleteSubject(getPets.get(1));
+                //petRepo.deleteSubject(getPets.get(1));
 
                 if(errorCounter == 0){
                     Pet pet = new Pet(microChip, name, gender, email, accessCode,breed, neutered);
